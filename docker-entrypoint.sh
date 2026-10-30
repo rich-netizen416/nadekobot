@@ -6,7 +6,9 @@ data_init="/app/data_init"
 data="/app/data"
 
 cp -R -n $data_init/* $data
-cp -n "$data_init/creds_example.yml" "$data/creds.yml"
+if [ -f "$data_init/creds_example.yml" ]; then
+    cp -n "$data_init/creds_example.yml" "$data/creds.yml"
+fi
 
 # Always overwrite native libraries to ensure updates are applied
 mkdir -p "$data/lib"
