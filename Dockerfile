@@ -22,18 +22,29 @@ RUN dotnet publish -c Release -o /app --self-contained -r $(cat /tmp/rid) --no-r
 
 FROM debian:trixie-slim
 ARG TARGETARCH
+ARG FFMPEG_VERSION=9.0.2
+ARG YT_DLP_VERSION=2026.10.26
 WORKDIR /app
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        ca-certificates curl unzip \
-        ffmpeg libsodium23 libopus0 libicu76 tzdata \
-    && rm -rf /var/lib/apt/lists/*
+        ca-certificates curl unzip build-essential pkg-config yasm nasm \
+        zlib1g-dev libx264-dev libx265-dev libopus-dev libvorbis-dev libvpx-dev libmp3lame-dev \
+        libsodium23 libopus0 libicu76 tzdata \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -fsSL "https://www.ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.gz" -o /tmp/ffmpeg.tar.gz \
+    && mkdir -p /tmp/ffmpeg-src \
+    && tar -xzf /tmp/ffmpeg.tar.gz -C /tmp/ffmpeg-src --strip-components=1 \
+    && cd /tmp/ffmpeg-src \
+    && ./configure --prefix=/usr/local --enable-gpl --enable-libx264 --enable-libx265 --enable-libopus --enable-libvorbis --enable-libvpx --enable-libmp3lame --disable-doc --disable-debug --disable-ffplay --disable-ffprobe --disable-static --enable-shared \
+    && make -j"$(nproc)" \
+    && make install \
+    && rm -rf /tmp/ffmpeg.tar.gz /tmp/ffmpeg-src
 
 RUN curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh
 
 RUN YT_DLP_BIN="yt-dlp_linux$([ "$TARGETARCH" = "arm64" ] && echo "_aarch64" || echo "")" \
-    && curl -L -o /usr/local/bin/yt-dlp "https://github.com/yt-dlp/yt-dlp/releases/latest/download/${YT_DLP_BIN}" \
+    && curl -L -o /usr/local/bin/yt-dlp "https://github.com/yt-dlp/yt-dlp/releases/download/${YT_DLP_VERSION}/${YT_DLP_BIN}" \
     && chmod 755 /usr/local/bin/yt-dlp
 
 RUN DAVE_ARCH="$([ "$TARGETARCH" = "arm64" ] && echo "ARM64" || echo "X64")" \

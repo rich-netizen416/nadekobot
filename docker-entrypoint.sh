@@ -13,6 +13,6 @@ mkdir -p "$data/lib"
 rm -f "$data/lib/"*.so
 cp -fL "$data_init/lib/"*.so "$data/lib/"
 
-yt-dlp -U || true
+yt-dlp -U --quiet || true
 
 exec "$@"
