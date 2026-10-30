@@ -11,4 +11,7 @@
 # ignore bin and obj folders in projects
 src/**/bin/*
 src/**/obj/*
-src/NadekoBot/data/creds.yml
+
+# Keep runtime config files in the bot data folder available to the container
+!src/NadekoBot/data/
+!src/NadekoBot/data/**
